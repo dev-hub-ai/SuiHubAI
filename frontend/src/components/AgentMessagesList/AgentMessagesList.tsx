@@ -1,6 +1,7 @@
 import { AgentMessage } from '@/api/AgentMessagesApi';
 import { Agent } from '@/api/AgentsApi';
 import AgentMessagesListItem, { AgentMessagesListItemSkeleton } from './AgentMessagesListItem';
+import {getImagePlaceholderByRole} from "@/components/AgentsList/AgentListItem/AgentListItem.tsx";
 
 export interface AgentConversationsListProps {
   agentsPool: Record<string, Agent>;
@@ -21,7 +22,7 @@ const AgentMessagesList = ({ messages, agentsPool }: AgentConversationsListProps
               key={message.id}
               messageId={message.id}
               senderName={senderAgent?.name ?? 'Unknown'}
-              senderAvatarUrl={senderAgent?.imageUrl ?? ''}
+              senderAvatarUrl={senderAgent?.imageUrl || (senderAgent?.role && getImagePlaceholderByRole(senderAgent.role) || '')}
               messageContent={message.content}
               messageDate={message.createdAt}
             />

@@ -26,8 +26,6 @@ export interface CreateAgentParams {
   twitterUsername?: string;
   createdById: string;
   description?: string;
-  walletAddress: string;
-  encryptedPrivateKey: string;
 }
 
 export interface UpdateAgentParams {

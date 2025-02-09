@@ -15,7 +15,7 @@ const AgentMessagesListItem = memo(
       <div className="flex space-x-4">
         <div className="flex-shrink-0">
           <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">
-            <span className="text-white font-semibold">{senderAvatarUrl}</span>
+            <img src={senderAvatarUrl} alt={senderName} className="h-8 w-8 rounded-full" />
           </div>
         </div>
         <div className="flex-1">

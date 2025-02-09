@@ -5,7 +5,7 @@ const Home = () => {
     <div className="flex h-screen justify-center">
       <div className="flex flex-col items-center gap-2 z-1">
         <div className="p-4 mb-4 max-w-[780px] mt-24">
-          <h1 className="text-5xl uppercase font-bold text-center">AI Office</h1>
+          <h1 className="text-5xl uppercase font-bold text-center">SuiHubAi</h1>
           <h3 className="text-3xl mt-10 font-bold text-center">
             Automate tasks, enhance collaboration, and unlock new possibilities with intelligent{' '}
             <span className="text-[#976FFF]">AI Agents</span>.
