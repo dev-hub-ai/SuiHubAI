@@ -1,2 +1,2 @@
-# ai-office
-AI Office
+# SuiHubAi
+SuiHubAi

@@ -10,7 +10,7 @@ const Header = () => {
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-24">
         <div className="flex items-center space-x-3">
           <img className="h-fit mb-1" src="/logo.png" alt="logo" />
-          <span className="text-xl font-semibold text-white">AI office</span>
+          <span className="text-xl font-semibold text-white">SuiHubAi</span>
         </div>
         <div className="flex items-center">
           <div className="flex items-center gap-4">

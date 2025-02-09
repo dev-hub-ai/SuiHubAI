@@ -8,7 +8,7 @@ export interface AgentListItemProps {
   isSelected?: boolean;
 }
 
-const getImagePlaceholderByRole = (role: AgentRole) => {
+export const getImagePlaceholderByRole = (role: AgentRole) => {
   switch (role) {
     case AgentRole.Producer: {
       return '/boss.jpeg';

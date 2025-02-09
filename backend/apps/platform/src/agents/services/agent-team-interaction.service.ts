@@ -10,7 +10,7 @@ import {
   InjectElizaApi,
 } from '@apps/platform/agents/decorators';
 import { AgentRole, AgentTeamInteractionStatus } from '@apps/platform/agents/enums';
-import { ElizaApi } from "@apps/platform/agents/api";
+import { ElizaApi } from '@apps/platform/agents/api';
 import { AgentService } from './agent.service';
 
 export interface CreateAgentTeamInteractionParams {
