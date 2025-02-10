@@ -303,58 +303,95 @@ export async function mintNFT(
   nftId?: string;
 }> {
   try {
-    const command = `sui client call \
-      --package ${packageId} \
-      --module nft_collection \
-      --function mint_nft \
-      --args "${params.collectionCap}" "${params.collectionId}" \
-      "${Buffer.from(params.name).toString("hex")}" \
-      "${Buffer.from(params.description).toString("hex")}" \
-      "${Buffer.from(params.url).toString("hex")}" \
-      --gas-budget 100000000`;
+    // Pre-compute hex values
+    const nameHex = Buffer.from(params.name).toString("hex");
+    const descriptionHex = Buffer.from(params.description).toString("hex");
+    const urlHex = Buffer.from(params.url).toString("hex");
+
+    // Construct command using array join
+    const command = [
+      "sui client call",
+      `--package ${packageId}`,
+      "--module nft_collection",
+      "--function mint_nft",
+      "--args",
+      `"${params.collectionCap}"`, // CollectionCap object ID
+      `"${params.collectionId}"`, // Collection object ID
+      `"0x${nameHex}"`, // NFT name as hex
+      `"0x${descriptionHex}"`, // NFT description as hex
+      `"0x${urlHex}"`, // NFT URL as hex
+      "--gas-budget 100000000",
+      "--json",
+    ].join(" ");
+
+    console.log("Executing mint command:", command);
 
     const output = execSync(command, {
       encoding: "utf8",
     });
 
-    // Extract transaction ID from output
-    const txMatch = output.match(/Transaction Hash: (0x[a-fA-F0-9]+)/);
-    const transactionId = txMatch ? txMatch[1] : undefined;
+    // Parse JSON output
+    const result = JSON.parse(output);
+    console.log("Mint result:", JSON.stringify(result, null, 2));
 
-    // Extract created NFT ID from output
-    const nftMatch = output.match(/Created: Object ID: (0x[a-fA-F0-9]+)/);
-    const nftId = nftMatch ? nftMatch[1] : undefined;
+    // Extract transaction ID and NFT ID from effects
+    const txId = result.digest;
+    const objectChanges = result.objectChanges || [];
+
+    // Find the newly created NFT object
+    const nftObject = objectChanges.find(
+      (obj: any) =>
+        obj.type === "created" &&
+        obj.objectType?.includes("::nft_collection::NFT")
+    );
+
+    if (!nftObject) {
+      return {
+        success: false,
+        error: "Could not find NFT object in transaction output",
+        transactionId: txId,
+      };
+    }
 
     return {
       success: true,
-      transactionId,
-      nftId,
+      transactionId: txId,
+      nftId: nftObject.objectId,
     };
   } catch (error) {
     console.error("Error minting NFT:", error);
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
 
 export async function getNFTInfo(nftId: string): Promise<any> {
   try {
-    const output = execSync(`sui client object ${nftId}`, {
+    const output = execSync(`sui client object ${nftId} --json`, {
       encoding: "utf8",
     });
 
-    return JSON.parse(output);
+    const result = JSON.parse(output);
+
+    // Log raw output for debugging
+    console.log("Raw NFT Info Output:", output);
+
+    return result;
   } catch (error) {
     console.error("Error getting NFT info:", error);
+    if (error instanceof Error) {
+      console.error("Raw output:", error.message);
+    }
     throw error;
   }
 }
 
 export async function getTransactionInfo(transactionId: string): Promise<any> {
   try {
-    const output = execSync(`sui client transaction ${transactionId}`, {
+    // Updated command to use tx-block instead of transaction
+    const output = execSync(`sui client tx-block ${transactionId} --json`, {
       encoding: "utf8",
     });
 
@@ -362,5 +399,101 @@ export async function getTransactionInfo(transactionId: string): Promise<any> {
   } catch (error) {
     console.error("Error getting transaction info:", error);
     throw error;
+  }
+}
+
+interface CreateCollectionParams {
+  packageId: string;
+  name: string;
+  symbol: string;
+  description: string;
+  maxSupply: number;
+}
+
+interface CreateCollectionResult {
+  success: boolean;
+  collectionId?: string;
+  collectionCap?: string;
+  error?: string;
+  output?: any;
+}
+
+export async function createCollection(
+  params: CreateCollectionParams
+): Promise<CreateCollectionResult> {
+  try {
+    // Pre-compute hex values
+    const nameHex = Buffer.from(params.name).toString("hex");
+    const symbolHex = Buffer.from(params.symbol).toString("hex");
+    const descriptionHex = Buffer.from(params.description || "").toString(
+      "hex"
+    );
+
+    // Construct command using array join
+    const command = [
+      "sui client call",
+      `--package ${params.packageId}`,
+      "--module nft_collection",
+      "--function create_collection",
+      "--args",
+      `"0x${nameHex}"`,
+      `"0x${symbolHex}"`,
+      `"0x${descriptionHex}"`,
+      `"${params.maxSupply}"`,
+      "--gas-budget 100000000",
+      "--json",
+    ].join(" ");
+
+    console.log("Executing create collection command:", command);
+
+    const output = execSync(command, {
+      encoding: "utf8",
+    });
+
+    const result = JSON.parse(output);
+
+    // Extract collection ID and cap from the objectChanges array
+    const objectChanges = result.objectChanges || [];
+
+    // Find Collection and CollectionCap objects
+    const collectionObject = objectChanges.find((obj: any) =>
+      obj.objectType?.includes("::nft_collection::Collection")
+    );
+
+    const collectionCapObject = objectChanges.find((obj: any) =>
+      obj.objectType?.includes("::nft_collection::CollectionCap")
+    );
+
+    if (!collectionObject || !collectionCapObject) {
+      return {
+        success: false,
+        error: "Failed to find Collection or CollectionCap objects",
+        output: result,
+      };
+    }
+
+    const collectionId = collectionObject.objectId;
+    const collectionCap = collectionCapObject.objectId;
+
+    if (!collectionId || !collectionCap) {
+      return {
+        success: false,
+        error: "Failed to extract collection ID or capability",
+        output: result,
+      };
+    }
+
+    return {
+      success: true,
+      collectionId,
+      collectionCap,
+      output: result,
+    };
+  } catch (error) {
+    console.error("Error creating collection:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }

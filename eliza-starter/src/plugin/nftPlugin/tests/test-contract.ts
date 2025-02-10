@@ -5,7 +5,8 @@ import {
   mintNFT,
   getNFTInfo,
   getTransactionInfo,
-} from "./generateMoveContractCode.ts";
+  createCollection,
+} from "../utils/generateMoveContractCode.ts";
 
 async function testContractDeployment() {
   try {
@@ -48,29 +49,43 @@ async function testContractDeployment() {
       error: publishError,
     } = await publishMoveContract(packagePath);
 
-    if (!success) {
+    if (!success || !packageId) {
       throw new Error(
         `Publication failed: ${publishError}\nOutput: ${publishOutput}`
       );
     }
 
-    if (!packageId) {
-      throw new Error("Publication succeeded but no package ID was returned");
-    }
-
     console.log("Contract published successfully!");
     console.log("Package ID:", packageId);
-    console.log("\nFull publication output:", publishOutput);
 
-    // 4. Test minting (uncomment when ready)
-    /*
+    // 4. Create collection
+    console.log("\nCreating collection...");
+    const createCollectionResult = await createCollection({
+      packageId,
+      name: config.name,
+      symbol: config.symbol,
+      description: config.description || "",
+      maxSupply: config.maxSupply,
+    });
+
+    if (!createCollectionResult.success) {
+      throw new Error(
+        `Failed to create collection: ${createCollectionResult.error}`
+      );
+    }
+
+    console.log("\nCollection created successfully:");
+    console.log("Collection ID:", createCollectionResult.collectionId);
+    console.log("Collection Cap:", createCollectionResult.collectionCap);
+
+    // 5. Test minting
     console.log("\nTesting NFT minting...");
     const mintParams = {
-      collectionId: "YOUR_COLLECTION_ID",
-      collectionCap: "YOUR_COLLECTION_CAP",
+      collectionId: createCollectionResult.collectionId!,
+      collectionCap: createCollectionResult.collectionCap!,
       name: "Test NFT #1",
       description: "My first test NFT",
-      url: "https://example.com/nft/1.png"
+      url: "https://example.com/nft/1.png",
     };
 
     const mintResult = await mintNFT(packageId, mintParams);
@@ -79,15 +94,19 @@ async function testContractDeployment() {
       console.log("NFT ID:", mintResult.nftId);
       console.log("Transaction ID:", mintResult.transactionId);
 
-      const nftInfo = await getNFTInfo(mintResult.nftId);
-      console.log("\nNFT Info:", JSON.stringify(nftInfo, null, 2));
+      try {
+        const nftInfo = await getNFTInfo(mintResult.nftId);
+        console.log("\nNFT Info:", JSON.stringify(nftInfo, null, 2));
 
-      const txInfo = await getTransactionInfo(mintResult.transactionId!);
-      console.log("\nTransaction Info:", JSON.stringify(txInfo, null, 2));
+        const txInfo = await getTransactionInfo(mintResult.transactionId!);
+        console.log("\nTransaction Info:", JSON.stringify(txInfo, null, 2));
+      } catch (error) {
+        console.error("Error getting NFT or transaction info:", error);
+        // Continue execution even if getting info fails
+      }
     } else {
       console.error("Minting failed:", mintResult.error);
     }
-    */
   } catch (error) {
     console.error("Test failed:", error);
   }
