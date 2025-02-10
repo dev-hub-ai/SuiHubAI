@@ -41,6 +41,10 @@ const AgentDetailsOverview = ({ agent, onEditButtonClick }: AgentDetailsOverview
             <h3 className="text-sm font-medium text-gray-400">Model API Key</h3>
             {agent ? <p className="mt-1 text-lg">{agent.modelApiKey}</p> : <Skeleton className="mt-1 h-10" />}
           </div>
+          <div className="md:col-span-2">
+            <h3 className="text-sm font-medium text-gray-400">Wallet Address</h3>
+            {agent ? <p className="mt-1 text-lg">{agent.walletAddress}</p> : <Skeleton className="mt-1 h-10" />}
+          </div>
         </div>
       </div>
     </div>

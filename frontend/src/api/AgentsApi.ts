@@ -19,6 +19,7 @@ export interface Agent {
   role: AgentRole;
   model: AgentModelProvider;
   modelApiKey: string;
+  walletAddress: string;
   config: Record<string, unknown>;
   description?: string;
 }
