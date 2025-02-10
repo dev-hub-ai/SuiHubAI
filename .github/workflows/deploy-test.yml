@@ -25,3 +25,53 @@ jobs:
       DOCKER_BUILD_ENVS: |
         ENV VITE_API_URL=${{ secrets.TEST_VITE_API_URL }}
         ENV VITE_APP_NAME='AI Office'
+
+  deploy-backend:
+    uses: dev-hub-ai/SuiHubAI/.github/workflows/reusable_deploy_to_ecs.yaml@reusable-workflows/v1
+    with:
+      ENVIRONMENT: test
+      SERVICE_TYPE: be
+      APP_NAME: ai-office
+      LAUNCH_TYPE: FARGATE
+      DOCKERFILE_PATH: ./backend/Dockerfile
+      DOCKER_CONTEXT: ./backend
+      AWS_SECRETS_LIST: |
+        DATABASE_CONNECTION_URL
+        SESSIONS_SECRET
+        SESSION_TOKEN_EXPIRES_IN
+        APPLICATION_ORIGIN
+        COOKIE_DOMAIN
+        PORT
+        WALLET_ENCRYPTION_KEY
+        ELIZA_API_URL
+        ELIZA_API_SECRET_KEY
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.TEST_AWS_REGION }}
+      ARN_EXECUTION_ROLE: ${{ secrets.TEST_ARN_EXECUTION_ROLE }}
+      SECRET_ARN: ${{ secrets.TEST_SECRET_ARN }}
+      ECS_CLUSTER_NAME: ${{ secrets.TEST_ECS_CLUSTER_NAME }}
+
+  deploy-eliza:
+    uses: dev-hub-ai/SuiHubAI/.github/workflows/reusable_deploy_to_ecs.yaml@reusable-workflows/v1
+    with:
+      ENVIRONMENT: test
+      SERVICE_TYPE: eliza
+      APP_NAME: ai-office
+      LAUNCH_TYPE: FARGATE
+      DOCKERFILE_PATH: ./eliza-starter/Dockerfile
+      DOCKER_CONTEXT: ./eliza-starter
+      AWS_SECRETS_LIST: |
+        MONGODB_URL
+        MONGODB_NAME
+        EXPRESS_APP_PORT
+        ELIZA_API_URL
+        ELIZA_API_SECRET_KEY
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.TEST_AWS_REGION }}
+      ARN_EXECUTION_ROLE: ${{ secrets.TEST_ARN_EXECUTION_ROLE }}
+      SECRET_ARN: ${{ secrets.TEST_SECRET_ARN }}
+      ECS_CLUSTER_NAME: ${{ secrets.TEST_ECS_CLUSTER_NAME }}
