@@ -15,7 +15,6 @@ export interface AgentDto {
   createdAt: Date;
   updatedAt: Date;
   walletAddress: string;
-  encryptedPrivateKey: string;
   description?: string;
   imageUrl?: string;
   createdById?: string | null;
@@ -57,6 +56,12 @@ export class CreateAgentBodyDto {
 
   @IsString()
   twitterUsername?: string;
+
+  @IsString()
+  twitterPassword?: string;
+
+  @IsString()
+  twitterEmail?: string;
 }
 
 export class UpdateAgentBodyDto {
@@ -77,4 +82,10 @@ export class UpdateAgentBodyDto {
 
   @IsString()
   twitterUsername?: string;
+
+  @IsString()
+  twitterPassword?: string;
+
+  @IsString()
+  twitterEmail?: string;
 }

@@ -53,7 +53,7 @@ import SessionsModuleTokens from './sessions.module.tokens';
       },
       inject: [SuiMessageValidatorService, EthMessageValidatorService],
     },
-{
+    {
       provide: SuiMessageValidatorService,
       useClass: SuiMessageValidatorService,
     },

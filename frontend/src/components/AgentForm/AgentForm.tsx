@@ -10,7 +10,8 @@ export interface AgentFormData {
   modelApiKey: string;
   twitterCookie?: string;
   twitterUsername?: string;
-  ethAmount?: string;
+  twitterPassword?: string;
+  twitterEmail?: string;
 }
 
 interface AgentFormProps {
@@ -40,7 +41,8 @@ const AgentForm = ({
   const [modelApiKey, setModelApiKey] = useState(initialData?.modelApiKey || '');
   const [twitterCookie, setTwitterCookie] = useState(initialData?.twitterCookie || '');
   const [twitterUsername, setTwitterUsername] = useState(initialData?.twitterUsername || '');
-  const [ethAmount, setEthAmount] = useState(initialData?.ethAmount || '');
+  const [twitterPassword, setTwitterPassword] = useState(initialData?.twitterPassword || '');
+  const [twitterEmail, setTwitterEmail] = useState(initialData?.twitterEmail || '');
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -54,7 +56,6 @@ const AgentForm = ({
       modelApiKey,
       twitterCookie,
       twitterUsername,
-      ethAmount,
     };
 
     onSubmit(formData);
@@ -113,8 +114,38 @@ const AgentForm = ({
                 type="text"
                 id="twitterUsername"
                 name="twitterUsername"
-                value={twitterCookie}
+                value={twitterUsername}
                 onChange={(event) => setTwitterUsername(event.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          ) : null}
+          {role === AgentRole.Adviser || role === AgentRole.Influencer ? (
+            <div>
+              <label htmlFor="twitterEmail" className="block text-sm font-medium text-gray-400">
+                Twitter Email
+              </label>
+              <input
+                type="text"
+                id="twitterEmail"
+                name="twitterEmail"
+                value={twitterEmail}
+                onChange={(event) => setTwitterEmail(event.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          ) : null}
+          {role === AgentRole.Adviser || role === AgentRole.Influencer ? (
+            <div>
+              <label htmlFor="twitterPassword" className="block text-sm font-medium text-gray-400">
+                Twitter Password
+              </label>
+              <input
+                type="text"
+                id="twitterPassword"
+                name="twitterPassword"
+                value={twitterPassword}
+                onChange={(event) => setTwitterPassword(event.target.value)}
                 className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -134,31 +165,6 @@ const AgentForm = ({
               />
             </div>
           ) : null}
-          {role === AgentRole.Producer && (
-            <div>
-              <label htmlFor="ethAmount" className="block text-sm font-medium text-gray-400">
-                ETH Amount to Fund Agent
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <input
-                  type="number"
-                  step="0.000001"
-                  id="ethAmount"
-                  name="ethAmount"
-                  value={ethAmount}
-                  onChange={(event) => setEthAmount(event.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="0.0"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <span className="text-gray-400">ETH</span>
-                </div>
-              </div>
-              <p className="mt-1 text-sm text-gray-400">
-                This amount will be transferred to the agent's wallet after creation
-              </p>
-            </div>
-          )}
           <div className="md:col-span-2">
             <label htmlFor="description" className="block text-sm font-medium text-gray-400">
               Agent Description
@@ -215,7 +221,6 @@ const AgentForm = ({
           modelApiKey,
           twitterCookie,
           twitterUsername,
-          ethAmount,
         })}
 
         {isSubmitting && (

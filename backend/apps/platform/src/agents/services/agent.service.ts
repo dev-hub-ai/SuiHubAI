@@ -1,5 +1,5 @@
-import { AES, enc } from 'crypto-js';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { AES } from 'crypto-js';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectTransactionsManager } from '@libs/transactions/decorators';
 import { TransactionsManager } from '@libs/transactions/managers';
@@ -24,6 +24,8 @@ export interface CreateAgentParams {
   name: string;
   twitterCookie?: string;
   twitterUsername?: string;
+  twitterPassword?: string;
+  twitterEmail?: string;
   createdById: string;
   description?: string;
 }
@@ -33,6 +35,8 @@ export interface UpdateAgentParams {
   modelApiKey?: string;
   twitterCookie?: string;
   twitterUsername?: string;
+  twitterPassword?: string;
+  twitterEmail?: string;
   name?: string;
   updatedById?: string | null;
   description?: string;
@@ -89,8 +93,9 @@ export class DefaultAgentService implements AgentService {
       throw new UnprocessableEntityException('Provided Agent Team does not exist.');
     }
 
-    const privateKey = generatePrivateKey();
-    const account = privateKeyToAccount(privateKey);
+    const keypair = Ed25519Keypair.generate();
+    const privateKey = Buffer.from(keypair.getSecretKey(), 'base64').toString('hex');
+    const walletAddress = keypair.getPublicKey().toSuiAddress();
 
     const encryptionKey = process.env.WALLET_ENCRYPTION_KEY;
 
@@ -120,13 +125,15 @@ export class DefaultAgentService implements AgentService {
         config: {
           twitterCookie: params.twitterCookie,
           twitterUsername: params.twitterUsername,
+          twitterPassword: params.twitterUsername,
+          twitterEmail: params.twitterEmail,
         },
         imageUrl: '',
         description: params.description,
         organization: params.organizationId,
         createdBy: params.createdById,
         updatedBy: params.createdById,
-        walletAddress: account.address,
+        walletAddress: walletAddress,
         encryptedPrivateKey: encryptedPrivateKey,
       });
 
@@ -157,6 +164,8 @@ export class DefaultAgentService implements AgentService {
         config: {
           twitterCookie: params.twitterCookie ?? (existingAgent.config.twitterCookie as string | undefined),
           twitterUsername: params.twitterUsername ?? (existingAgent.config.twitterUsername as string | undefined),
+          twitterPassword: params.twitterPassword ?? (existingAgent.config.twitterPassword as string | undefined),
+          twitterEmail: params.twitterEmail ?? (existingAgent.config.twitterEmail as string | undefined),
         },
         updatedBy: params.updatedById,
       });
@@ -177,17 +186,5 @@ export class DefaultAgentService implements AgentService {
     }
 
     return updatedAgent;
-  }
-
-  private decryptPrivateKey(encryptedPrivateKey: string): string {
-    const encryptionKey = process.env.WALLET_ENCRYPTION_KEY;
-
-    if (!encryptionKey) {
-      throw new Error('WALLET_ENCRYPTION_KEY environment variable is not set');
-    }
-
-    const bytes = AES.decrypt(encryptedPrivateKey, encryptionKey);
-
-    return bytes.toString(enc.Utf8);
   }
 }

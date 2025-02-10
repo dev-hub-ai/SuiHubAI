@@ -33,9 +33,9 @@ const useSignIn = () => {
       const preparedMessage = 'Sign in with Sui to the SuiHubAi';
 
       // TODO Handle case with non loaded providers.
-      const res: Signature = await signPersonalMessage({
+      const res: Signature = (await signPersonalMessage({
         message: message,
-      }) as unknown as Signature;
+      })) as unknown as Signature;
 
       await createSession({
         signature: res.signature || '',

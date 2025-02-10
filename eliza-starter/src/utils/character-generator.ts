@@ -1,8 +1,9 @@
+import { AES, enc } from 'crypto-js';
 import {Character, Clients, ModelProviderName} from "@elizaos/core";
 import { advertiser } from "../characters/advertiser.ts";
 import { influencer } from "../characters/influencer.ts";
 import { producer } from "../characters/producer.ts";
-import {AiOfficeCharacter} from "../agents/manager";
+import { AiOfficeCharacter } from "../agents/manager";
 
 type AgentRole =  "advertiser" | "influencer" | "producer";
 
@@ -15,6 +16,8 @@ export interface AgentConfiguration {
   organizationId: string;
   teamId: string;
   modelApiKey: string;
+  walletAddress: string;
+  encryptedPrivateKey: string;
   config: {
     twitterCookie?: string;
     twitterUsername?: string;
@@ -27,6 +30,18 @@ const AVAILABLE_TEMPLATES = {
   advertiser,
   influencer,
   producer,
+};
+
+const decryptPrivateKey = (encryptedPrivateKey: string): string => {
+  const encryptionKey = process.env.WALLET_ENCRYPTION_KEY;
+
+  if (!encryptionKey) {
+    throw new Error('WALLET_ENCRYPTION_KEY environment variable is not set');
+  }
+
+  const bytes = AES.decrypt(encryptedPrivateKey, encryptionKey);
+
+  return bytes.toString(enc.Utf8);
 };
 
 const getSecretsByModel = (model: string, modelApiKey: string) => {
@@ -47,10 +62,12 @@ const getSecretsByModel = (model: string, modelApiKey: string) => {
   }
 };
 
-export function generateCharacter(agentConfig: AgentConfiguration): AiOfficeCharacter {
+export const generateCharacter = (agentConfig: AgentConfiguration): AiOfficeCharacter => {
   if (!AVAILABLE_TEMPLATES[agentConfig.role]) {
     throw new Error("Invalid role");
   }
+
+  const decryptedPrivateKey = decryptPrivateKey(agentConfig.encryptedPrivateKey);
 
   return {
     ...AVAILABLE_TEMPLATES[agentConfig.role],
@@ -63,6 +80,7 @@ export function generateCharacter(agentConfig: AgentConfiguration): AiOfficeChar
     clients: agentConfig.role === 'producer' ? [] : [Clients.TWITTER],
     settings: {
       secrets: {
+        SUI_PRIVATE_KEY: decryptedPrivateKey,
         TWITTER_COOKIES: agentConfig.config.twitterCookie,
         TWITTER_USERNAME: agentConfig.config.twitterUsername,
         TWITTER_PASSWORD: agentConfig.config.twitterPassword,
