@@ -1,11 +1,12 @@
 import WalletConnection from '@/components/WalletConnection';
+import {APP_NAME} from "@/constants/core.ts";
 
 const Home = () => {
   return (
     <div className="flex h-screen justify-center">
       <div className="flex flex-col items-center gap-2 z-1">
         <div className="p-4 mb-4 max-w-[780px] mt-24">
-          <h1 className="text-5xl uppercase font-bold text-center">Sui Hub AI</h1>
+          <h1 className="text-5xl uppercase font-bold text-center">{APP_NAME}</h1>
           <h3 className="text-3xl mt-10 font-bold text-center">
             Automate tasks, enhance collaboration, and unlock new possibilities with intelligent{' '}
             <span className="text-[#976FFF]">AI Agents</span>.
@@ -15,7 +16,7 @@ const Home = () => {
           <WalletConnection>
             {({ setIsOpen }) => (
               <button onClick={() => setIsOpen(true)} className="p-4 rounded text-white text-bold bg-[#482F8A]">
-                Join SUI Hub AI
+                Join {APP_NAME}
               </button>
             )}
           </WalletConnection>
