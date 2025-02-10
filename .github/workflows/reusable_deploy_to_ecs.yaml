@@ -141,7 +141,7 @@ jobs:
           DURATION=0
           RETRY_INTERVAL=15
           TIMEOUT_INTERVAL=600
-          DESCRIBE_SERVICES="aws ecs describe-services --cluster ${{ secrets.ECS_CLUSTER_NAME }} --services ${{ inputs.LAUNCH_TYPE }}-${{ inputs.SERVICE_TYPE }}-service"
+          DESCRIBE_SERVICES="aws ecs describe-services --cluster ${{ secrets.ECS_CLUSTER_NAME }} --services ${{ inputs.SERVICE_TYPE }}-service"
           echo "Start to deploy task-definition: $( $DESCRIBE_SERVICES --query 'services[0].taskDefinition' --output text)"
           while [[ $( $DESCRIBE_SERVICES --query 'services[0].deployments[0].rolloutState' --output text) != "COMPLETED" ]]; do
             if [[ $( $DESCRIBE_SERVICES --query 'services[0].deployments[0].failedTasks' --output text) != "0" ]]; then
