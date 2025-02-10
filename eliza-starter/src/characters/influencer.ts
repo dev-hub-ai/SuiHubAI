@@ -17,7 +17,7 @@ export const influencer: Character = {
   clients: [],
   modelProvider: ModelProviderName.OPENROUTER,
   imageModelProvider: ModelProviderName.TOGETHER,
-  plugins: [imageGenerationPlugin, bootstrapPlugin, suiPlugin, nftPlugin],
+  plugins: [imageGenerationPlugin, bootstrapPlugin],
   settings: {
     voice: {
       model: "en_US-male-medium",

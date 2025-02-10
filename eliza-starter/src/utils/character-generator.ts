@@ -33,7 +33,7 @@ const getSecretsByModel = (model: string, modelApiKey: string) => {
   switch (model) {
     case ModelProviderName.OPENAI: {
       return {
-        OPENAI_API_KEY: modelApiKey
+        OPENAI_API_KEY: modelApiKey,
       };
     }
     case ModelProviderName.OPENROUTER: {

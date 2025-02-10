@@ -16,7 +16,7 @@ export const advertiser: Character = {
   clients: [Clients.TWITTER],
   modelProvider: ModelProviderName.OPENROUTER,
   imageModelProvider: ModelProviderName.TOGETHER,
-  plugins: [imageGenerationPlugin, bootstrapPlugin, suiPlugin],
+  plugins: [imageGenerationPlugin, bootstrapPlugin],
   settings: {
     voice: {
       model: "en_US-male-medium",

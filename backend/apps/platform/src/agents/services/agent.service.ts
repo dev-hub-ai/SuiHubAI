@@ -181,11 +181,13 @@ export class DefaultAgentService implements AgentService {
 
   private decryptPrivateKey(encryptedPrivateKey: string): string {
     const encryptionKey = process.env.WALLET_ENCRYPTION_KEY;
+
     if (!encryptionKey) {
       throw new Error('WALLET_ENCRYPTION_KEY environment variable is not set');
     }
 
     const bytes = AES.decrypt(encryptedPrivateKey, encryptionKey);
+
     return bytes.toString(enc.Utf8);
   }
 }
