@@ -26,7 +26,10 @@ export default class SessionsRestApi implements SessionsApi {
   }
 
   public async createSession(params: CreateSessionParams) {
-    await this.client.makeCall(`/sessions`, 'POST', params);
+    await this.client.makeCall(`/sessions`, 'POST', {
+      ...params,
+      provider: 'sui',
+    });
   }
 
   public async deleteSession() {
