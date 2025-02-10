@@ -24,7 +24,7 @@ jobs:
       ECS_CLUSTER_NAME: ${{ secrets.TEST_ECS_CLUSTER_NAME }}
       DOCKER_BUILD_ENVS: |
         ENV VITE_API_URL=${{ secrets.TEST_VITE_API_URL }}
-        ENV VITE_APP_NAME='AI Office'
+        ENV VITE_APP_NAME='Sui Hub AI'
 
   deploy-backend:
     uses: dev-hub-ai/SuiHubAI/.github/workflows/reusable_deploy_to_ecs.yaml@reusable-workflows/v1
