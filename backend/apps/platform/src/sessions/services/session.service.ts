@@ -1,18 +1,21 @@
-import { SiweMessage, generateNonce } from 'siwe';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectTransactionsManager } from '@libs/transactions/decorators';
 import { TransactionsManager } from '@libs/transactions/managers';
 import { InjectUserService } from '@apps/platform/users/decorators';
 import { InjectOrganizationService } from '@apps/platform/organizations/decorators';
-import { InjectSessionNonceRepository } from '@apps/platform/sessions/decorators';
+import { InjectSessionNonceRepository, InjectMessageValidatorServiceFactory } from '@apps/platform/sessions/decorators';
 import { UserService } from '@apps/platform/users/services';
 import { SessionData } from '@apps/platform/sessions/types';
 import { OrganizationService } from '@apps/platform/organizations/services';
 import { SessionNonceRepository } from '@apps/platform/sessions/repositories';
+import { MessageValidatorServiceFactory } from '@apps/platform/sessions/factories';
+import { AuthProvider } from '@apps/platform/sessions/enums';
+import { generateNonce } from '@apps/platform/sessions/utils';
 
 export interface CreateSessionParams {
   message: string;
   signature: string;
+  provider: AuthProvider;
 }
 
 export interface SessionService {
@@ -27,6 +30,8 @@ export class DefaultSessionService implements SessionService {
     @InjectSessionNonceRepository() private readonly sessionNonceRepository: SessionNonceRepository,
     @InjectOrganizationService() private readonly organizationService: OrganizationService,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
+    @InjectMessageValidatorServiceFactory()
+    private readonly messageValidatorServiceFactory: MessageValidatorServiceFactory,
   ) {}
 
   public async generateNonce() {
@@ -38,32 +43,35 @@ export class DefaultSessionService implements SessionService {
   }
 
   public async create(params: CreateSessionParams) {
-    const siwe = new SiweMessage(params.message);
-    const fields = await siwe.verify({ signature: params.signature });
+    const messageValidatorService = this.messageValidatorServiceFactory(params.provider);
 
-    if (!fields.success) {
+    const { success, nonce, address } = await messageValidatorService.verify(params.message, params.signature);
+
+    if (!success) {
       throw new UnauthorizedException('Failed to verify signature.');
     }
 
-    const nonceExists = await this.sessionNonceRepository.existsByValue(fields.data.nonce);
+    const nonceExists = !nonce || (await this.sessionNonceRepository.existsByValue(nonce));
 
     if (!nonceExists) {
       throw new UnauthorizedException('Invalid nonce provided.');
     }
 
-    await this.sessionNonceRepository.deleteOne(fields.data.nonce);
+    if (nonce) {
+      await this.sessionNonceRepository.deleteOne(nonce);
+    }
 
-    const user = await this.userService.getByAddress(fields.data.address);
+    const user = await this.userService.getByAddress(address);
 
     if (user) {
       return { userId: user.id, organizationId: user.organizationId };
     }
 
     return this.transactionsManager.useTransaction(async () => {
-      const organization = await this.organizationService.create({ name: `${fields.data.address}` });
+      const organization = await this.organizationService.create({ name: `${address}` });
 
       const newUser = await this.userService.create({
-        address: fields.data.address,
+        address,
         organizationId: organization.id,
       });
 

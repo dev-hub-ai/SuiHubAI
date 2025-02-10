@@ -33,6 +33,7 @@ export default class SessionController {
     const { organizationId, userId } = await this.sessionService.create({
       signature: body.signature,
       message: body.message,
+      provider: body.provider,
     });
 
     session.set('userId', userId);
