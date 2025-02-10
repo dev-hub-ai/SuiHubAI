@@ -197,7 +197,9 @@ export const sendInteractionToProducer = async (
         context: producerContext,
         modelClass: ModelClass.LARGE
     });
+
     console.log(`Respond from producer: ${respondFromProducer}`);
+
     const extractedRequests = extractRequestForAgent(respondFromProducer);
 
     for (const request of extractedRequests) {
@@ -247,7 +249,8 @@ const sendRequestToAgent = async (
         modelClass: ModelClass.LARGE
     });
 
-    console.log("Resonse from agent", respondFromProducer);
+    console.log("Response from agent", respondFromProducer);
+
     const extractedRequests = extractRequestForAgent(respondFromProducer);
 
     for (const request of extractedRequests) {
