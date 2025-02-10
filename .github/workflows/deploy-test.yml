@@ -3,7 +3,7 @@ name: Deploy-test
 on:
   push:
     branches:
-      - prod
+      - test
 
 jobs:
   deploy-frontend:
