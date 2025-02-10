@@ -1,4 +1,4 @@
-import * as crypto from 'crypto-js';
+import crypto from 'crypto-js';
 import {Character, Clients, ModelProviderName} from "@elizaos/core";
 import { advertiser } from "../characters/advertiser.ts";
 import { influencer } from "../characters/influencer.ts";
