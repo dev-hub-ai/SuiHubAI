@@ -57,12 +57,6 @@ export class CreateAgentBodyDto {
 
   @IsString()
   twitterUsername?: string;
-
-  @IsString()
-  walletAddress: string;
-
-  @IsString()
-  encryptedPrivateKey: string;
 }
 
 export class UpdateAgentBodyDto {
