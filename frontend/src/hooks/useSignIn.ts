@@ -19,7 +19,7 @@ const useSignIn = () => {
   const { mutateAsync: createSessionNonce } = useCreateSessionNonceMutation();
   const { mutateAsync: createSession } = useCreateSessionMutation();
 
-  const { mutate: signPersonalMessage } = useSignPersonalMessage();
+  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
 
   useAsyncEffect(async () => {
     if (!account?.address || currentUserId !== null) {
@@ -33,7 +33,7 @@ const useSignIn = () => {
       const preparedMessage = 'Sign in with Sui to the SuiHubAi';
 
       // TODO Handle case with non loaded providers.
-      const res: Signature = signPersonalMessage({
+      const res: Signature = await signPersonalMessage({
         message: message,
       }) as unknown as Signature;
 
