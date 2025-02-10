@@ -56,6 +56,8 @@ const AgentForm = ({
       modelApiKey,
       twitterCookie,
       twitterUsername,
+      twitterEmail,
+      twitterPassword,
     };
 
     onSubmit(formData);
