@@ -84,29 +84,28 @@ async function testContractDeployment() {
       collectionId: createCollectionResult.collectionId!,
       collectionCap: createCollectionResult.collectionCap!,
       name: "Test NFT #1",
-      description: "My first test NFT",
+      description: "Test NFT",
       url: "https://example.com/nft/1.png",
     };
 
+    console.log("Minting with params:", JSON.stringify(mintParams, null, 2));
     const mintResult = await mintNFT(packageId, mintParams);
-    if (mintResult.success && mintResult.nftId) {
-      console.log("NFT minted successfully!");
-      console.log("NFT ID:", mintResult.nftId);
-      console.log("Transaction ID:", mintResult.transactionId);
 
-      try {
-        const nftInfo = await getNFTInfo(mintResult.nftId);
-        console.log("\nNFT Info:", JSON.stringify(nftInfo, null, 2));
-
-        const txInfo = await getTransactionInfo(mintResult.transactionId!);
-        console.log("\nTransaction Info:", JSON.stringify(txInfo, null, 2));
-      } catch (error) {
-        console.error("Error getting NFT or transaction info:", error);
-        // Continue execution even if getting info fails
-      }
-    } else {
+    if (!mintResult.success) {
       console.error("Minting failed:", mintResult.error);
+      throw new Error(`NFT minting failed: ${mintResult.error}`);
     }
+
+    console.log("NFT minted successfully!");
+    console.log("NFT ID:", mintResult.nftId);
+    console.log("Transaction ID:", mintResult.transactionId);
+
+    // Get NFT and transaction info
+    const nftInfo = await getNFTInfo(mintResult.nftId!);
+    console.log("\nNFT Info:", JSON.stringify(nftInfo, null, 2));
+
+    const txInfo = await getTransactionInfo(mintResult.transactionId!);
+    console.log("\nTransaction Info:", JSON.stringify(txInfo, null, 2));
   } catch (error) {
     console.error("Test failed:", error);
   }
