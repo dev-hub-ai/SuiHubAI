@@ -15,7 +15,7 @@ FROM nginx:1.20.2-alpine AS frontend-server
 
 WORKDIR /usr/app/html
 
-COPY --from=frontend-build /usr/src/app/build/client .
+COPY --from=frontend-build /usr/src/app/dist .
 COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 CMD ["nginx", "-g", "daemon off;"]
