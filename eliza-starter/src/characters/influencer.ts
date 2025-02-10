@@ -6,8 +6,6 @@ import {
 } from "@elizaos/core";
 import { imageGenerationPlugin } from "../plugin/imagePlugin/index.ts";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
-import baseSepPlugin from "../plugin/baseSepPlugin/src/index.ts";
-import nftPlugin from "../plugin/nftPlugin/src/index.ts";
 export const INFLUENCER_AGENT_ID = "e4bd91e4-33a0-4e2c-92f0-cf468e90a130";
 
 export const influencer: Character = {
@@ -17,7 +15,7 @@ export const influencer: Character = {
   clients: [],
   modelProvider: ModelProviderName.OPENROUTER,
   imageModelProvider: ModelProviderName.TOGETHER,
-  plugins: [imageGenerationPlugin, bootstrapPlugin, nftPlugin, baseSepPlugin],
+  plugins: [imageGenerationPlugin, bootstrapPlugin],
   settings: {
     voice: {
       model: "en_US-male-medium",
