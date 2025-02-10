@@ -14,12 +14,13 @@ import {
   saveHeuristImage,
 } from "@elizaos/plugin-image-generation";
 import {
-  generateERC721ContractCode,
-  compileContract,
-  deployContract,
-} from "../utils/deployEVMContract.ts";
-import { initWalletProvider } from "../../baseSepPlugin/providers/wallet.ts";
-import { collectionImageTemplate } from "../../baseSepPlugin/templates/index.ts";
+  generateMoveContract,
+  compileMoveContract,
+  publishMoveContract,
+  createCollection as createSuiCollection,
+} from "../utils/generateMoveContractCode.ts";
+import { parseAccount } from "../utils/utils.ts";
+import { collectionImageTemplate } from "../templates/index.ts";
 
 export async function createCollectionMetadata({
   runtime,
@@ -92,6 +93,7 @@ export async function createCollectionMetadata({
     return {
       name: collectionName,
       symbol: collectionName.slice(0, 5).toUpperCase(),
+      description: `${collectionName} Collection`,
       uri: jsonFilePath.url,
       maxSupply: 1000,
       fee: fee || 0,
@@ -107,6 +109,11 @@ export const createCollection = async (
   fee?: number
 ) => {
   try {
+    // Ensure we're using testnet
+    if (runtime.getSetting("SUI_NETWORK") !== "testnet") {
+      throw new Error("Collection creation is only supported on Sui testnet");
+    }
+
     const collectionInfo = await createCollectionMetadata({
       runtime,
       collectionName,
@@ -115,39 +122,56 @@ export const createCollection = async (
 
     if (!collectionInfo) return null;
 
-    // Initialize wallet provider for Base Sepolia
-    const walletProvider = await initWalletProvider(runtime);
-    const walletClient = walletProvider.getWalletClient("baseSepolia");
-    const publicClient = walletProvider.getPublicClient("baseSepolia");
+    // Generate and compile Move contract
+    const contractConfig = {
+      packageName: collectionName.toLowerCase().replace(/\s+/g, "_"),
+      name: collectionInfo.name,
+      symbol: collectionInfo.symbol,
+      description: collectionInfo.description,
+      maxSupply: collectionInfo.maxSupply,
+      network: "testnet",
+    };
 
-    // Generate and compile the ERC721 contract
-    const contractCode = generateERC721ContractCode(collectionName);
-    const { abi, bytecode } = await compileContract(
-      collectionName,
-      contractCode
-    );
+    // Generate contract
+    const { packagePath } = await generateMoveContract(contractConfig);
 
-    // Deploy the contract
-    const contractAddress = await deployContract({
-      walletClient,
-      publicClient,
-      abi,
-      bytecode,
-      args: [
-        collectionInfo.name,
-        collectionInfo.symbol,
-        collectionInfo.maxSupply,
-        collectionInfo.fee,
-      ],
+    // Compile contract
+    const compileResult = await compileMoveContract(packagePath);
+    if (!compileResult.compiled) {
+      throw new Error(`Failed to compile contract: ${compileResult.error}`);
+    }
+
+    // Publish contract
+    const publishResult = await publishMoveContract(packagePath);
+    if (!publishResult.success || !publishResult.packageId) {
+      throw new Error(`Failed to publish contract: ${publishResult.error}`);
+    }
+
+    // Create collection using the published contract
+    const createCollectionResult = await createSuiCollection({
+      packageId: publishResult.packageId,
+      name: collectionInfo.name,
+      symbol: collectionInfo.symbol,
+      description: collectionInfo.description || "",
+      maxSupply: collectionInfo.maxSupply,
     });
 
+    if (!createCollectionResult.success) {
+      throw new Error(
+        `Failed to create collection: ${createCollectionResult.error}`
+      );
+    }
+
     return {
-      network: "baseSepolia",
-      address: contractAddress,
-      link: `https://sepolia.basescan.org/address/${contractAddress}`,
+      network: "sui:testnet",
+      packageId: publishResult.packageId,
+      collectionId: createCollectionResult.collectionId,
+      collectionCap: createCollectionResult.collectionCap,
+      link: `https://suiexplorer.com/object/${createCollectionResult.collectionId}?network=testnet`,
       collectionInfo,
     };
   } catch (error) {
-    // ... existing error handling ...
+    elizaLogger.error("Error creating collection:", error);
+    throw error;
   }
 };

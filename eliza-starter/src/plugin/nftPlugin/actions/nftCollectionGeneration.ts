@@ -12,82 +12,82 @@ import {
 import { createCollectionMetadata } from "../handlers/createCollection.ts";
 import { CreateCollectionSchema } from "../types/index.ts";
 import { createCollectionTemplate } from "../templates/index.ts";
-import * as viemChains from "viem/chains";
-import { createPublicClient, createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
+import { parseAccount, SuiNetwork } from "../utils/utils.ts";
 
 import {
-  compileContract,
-  deployContract,
-  encodeConstructorArguments,
-  generateERC721ContractCode,
-} from "../utils/deployEVMContract.ts";
+  generateMoveContract,
+  compileMoveContract,
+  publishMoveContract,
+  createCollection,
+} from "../utils/generateMoveContractCode.ts";
 
 export class NFTCollectionAction {
-  private publicClient;
-  private walletClient;
-  private account;
+  private suiClient: SuiClient;
 
-  constructor(
-    private runtime: IAgentRuntime,
-    private chain: (typeof viemChains)[keyof typeof viemChains]
-  ) {
-    const privateKey = runtime.getSetting("EVM_PRIVATE_KEY") as `0x${string}`;
-    if (!privateKey) throw new Error("EVM private key not found");
-
-    const provider = http(chain.rpcUrls.default.http[0]);
-    this.account = privateKeyToAccount(privateKey);
-
-    this.walletClient = createWalletClient({
-      account: this.account,
-      chain,
-      transport: provider,
-    });
-
-    this.publicClient = createPublicClient({
-      chain,
-      transport: provider,
+  constructor(private runtime: IAgentRuntime) {
+    // Initialize Sui client with testnet
+    this.suiClient = new SuiClient({
+      url: getFullnodeUrl("testnet"),
     });
   }
 
-  async generateCollection() {
-    const contractName = this.runtime.character.name.replace(
-      /[^a-zA-Z0-9]/g,
-      "_"
-    );
-    const contractSymbol = `${contractName.toUpperCase()[0]}`;
-    const contractMaxSupply = 5000;
-    const royalty = 0;
-    const params = [contractName, contractSymbol, contractMaxSupply, royalty];
+  async generateCollection(name: string, description: string) {
+    // Generate contract name from collection name
+    const contractName = name.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+    const symbol = name.slice(0, 5).toUpperCase();
+    const maxSupply = 5000;
 
-    const sourceCode = generateERC721ContractCode(contractName);
-    const compiledContract = await compileContract(contractName, sourceCode);
+    // Generate Move contract
+    const contractConfig = {
+      packageName: contractName,
+      name: name,
+      symbol: symbol,
+      description: description,
+      maxSupply: maxSupply,
+    };
 
-    if (
-      !compiledContract ||
-      !compiledContract.abi ||
-      !compiledContract.bytecode
-    ) {
-      throw new Error("Contract compilation failed or produced invalid output");
+    // Generate and compile contract
+    const { packagePath } = await generateMoveContract(contractConfig);
+    const compileResult = await compileMoveContract(packagePath);
+
+    if (!compileResult.compiled) {
+      throw new Error(`Contract compilation failed: ${compileResult.error}`);
     }
 
-    const { abi, bytecode } = compiledContract;
     elizaLogger.log("Contract compiled successfully");
 
-    const contractAddress = await deployContract({
-      walletClient: this.walletClient,
-      publicClient: this.publicClient,
-      abi,
-      bytecode,
-      args: params,
-    });
+    // Publish contract
+    const publishResult = await publishMoveContract(packagePath);
 
-    if (!contractAddress) {
-      throw new Error("Contract deployment failed");
+    if (!publishResult.success || !publishResult.packageId) {
+      throw new Error(`Contract deployment failed: ${publishResult.error}`);
     }
 
-    elizaLogger.log(`Contract deployed at: ${contractAddress}`);
-    return contractAddress;
+    elizaLogger.log(
+      `Contract published with package ID: ${publishResult.packageId}`
+    );
+
+    // Create collection using the published contract
+    const createCollectionResult = await createCollection({
+      packageId: publishResult.packageId,
+      name: name,
+      symbol: symbol,
+      description: description,
+      maxSupply: maxSupply,
+    });
+
+    if (!createCollectionResult.success) {
+      throw new Error(
+        `Collection creation failed: ${createCollectionResult.error}`
+      );
+    }
+
+    return {
+      packageId: publishResult.packageId,
+      collectionId: createCollectionResult.collectionId,
+      collectionCap: createCollectionResult.collectionCap,
+    };
   }
 }
 
@@ -100,10 +100,10 @@ const nftCollectionGeneration: Action = {
     "MAKE_COLLECTION",
     "GENERATE_COLLECTION",
   ],
-  description: "Generate an NFT collection for the message",
+  description: "Generate an NFT collection on Sui",
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const evmPrivateKeyOk = !!runtime.getSetting("EVM_PRIVATE_KEY");
-    return evmPrivateKeyOk;
+    // Ensure we have the required Sui private key
+    return !!runtime.getSetting("SUI_PRIVATE_KEY");
   },
   handler: async (
     runtime: IAgentRuntime,
@@ -113,50 +113,48 @@ const nftCollectionGeneration: Action = {
     callback: HandlerCallback
   ) => {
     try {
+      // Ensure we're on testnet
+      if (runtime.getSetting("SUI_NETWORK") !== "testnet") {
+        throw new Error(
+          "Collection generation is only supported on Sui testnet"
+        );
+      }
+
       elizaLogger.log("Composing state for message:", message);
       const state = await runtime.composeState(message);
 
-      // Compose transfer context
+      // Compose collection context
       const context = composeContext({
         state,
         template: createCollectionTemplate,
       });
 
-      // Get list of supported chains from viem
-      const chains = viemChains;
-      const _SupportedChainList = Object.keys(viemChains) as Array<
-        keyof typeof viemChains
-      >;
-      const supportedChains = _SupportedChainList as unknown as [
-        string,
-        ...string[]
-      ];
-
-      // Add chains to context
-      const contextWithChains = context.replace(
-        "SUPPORTED_CHAINS",
-        supportedChains.map((item) => (item ? `"${item}"` : item)).join("|")
-      );
-
       const res = await generateObject({
         runtime,
-        context: contextWithChains,
+        context,
         modelClass: ModelClass.LARGE,
         schema: CreateCollectionSchema,
       });
 
       const content = res.object as {
-        chainName: (typeof supportedChains)[number];
+        name: string;
+        description: string;
       };
 
-      const chain = viemChains[content.chainName];
-      const action = new NFTCollectionAction(runtime, chain);
-
-      const contractAddress = await action.generateCollection();
+      const action = new NFTCollectionAction(runtime);
+      const result = await action.generateCollection(
+        content.name,
+        content.description
+      );
 
       if (callback) {
         callback({
-          text: `Collection created successfully! 🎉\nView on ${chain.name}: ${chain.blockExplorers.default.url}/address/${contractAddress}\nContract Address: ${contractAddress}`,
+          text:
+            `Collection created successfully! 🎉\n` +
+            `Package ID: ${result.packageId}\n` +
+            `Collection ID: ${result.collectionId}\n` +
+            `Collection Cap: ${result.collectionCap}\n` +
+            `View on Explorer: https://suiexplorer.com/object/${result.collectionId}?network=testnet`,
           attachments: [],
         });
       }
@@ -171,17 +169,16 @@ const nftCollectionGeneration: Action = {
     [
       {
         user: "{{user1}}",
-        content: { text: "Generate a collection on Ethereum" },
+        content: { text: "Generate a collection on Sui" },
       },
       {
         user: "{{agentName}}",
         content: {
-          text: "Here's the collection you requested.",
+          text: "Here's your new NFT collection on Sui.",
           action: "GENERATE_COLLECTION",
         },
       },
     ],
-    // ... Add more examples for EVM chains ...
   ],
 } as Action;
 
