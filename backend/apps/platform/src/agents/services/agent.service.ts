@@ -1,5 +1,5 @@
 import { AES, enc } from 'crypto-js';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectTransactionsManager } from '@libs/transactions/decorators';
 import { TransactionsManager } from '@libs/transactions/managers';
@@ -89,8 +89,9 @@ export class DefaultAgentService implements AgentService {
       throw new UnprocessableEntityException('Provided Agent Team does not exist.');
     }
 
-    const privateKey = generatePrivateKey();
-    const account = privateKeyToAccount(privateKey);
+    const keypair = Ed25519Keypair.generate();
+    const privateKey = Buffer.from(keypair.getSecretKey(), 'base64').toString('hex');
+    const walletAddress = keypair.getPublicKey().toSuiAddress();
 
     const encryptionKey = process.env.WALLET_ENCRYPTION_KEY;
 
@@ -126,7 +127,7 @@ export class DefaultAgentService implements AgentService {
         organization: params.organizationId,
         createdBy: params.createdById,
         updatedBy: params.createdById,
-        walletAddress: account.address,
+        walletAddress: walletAddress,
         encryptedPrivateKey: encryptedPrivateKey,
       });
 
