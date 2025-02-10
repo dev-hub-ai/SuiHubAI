@@ -57,7 +57,7 @@ jobs:
     uses: dev-hub-ai/SuiHubAI/.github/workflows/reusable_deploy_to_ecs.yaml@reusable-workflows/v1
     with:
       ENVIRONMENT: test
-      SERVICE_TYPE: eliza
+      SERVICE_TYPE: sui-eliza
       APP_NAME: ai-office
       LAUNCH_TYPE: FARGATE
       DOCKERFILE_PATH: ./eliza-starter/Dockerfile
