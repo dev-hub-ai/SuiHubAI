@@ -28,6 +28,8 @@ const AgentDetails = () => {
       model: data.model,
       twitterCookie: data.twitterCookie,
       twitterUsername: data.twitterUsername,
+      twitterPassword: data.twitterPassword,
+      twitterEmail: data.twitterEmail,
     });
 
     setIsEditMode(false);

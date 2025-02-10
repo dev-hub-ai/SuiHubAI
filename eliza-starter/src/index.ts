@@ -345,6 +345,8 @@ const initializeAgentsSystem = async () => {
     description?: string;
     model: string;
     modelApiKey: string;
+    encryptedPrivateKey: string;
+    walletAddress: string;
     config: {
       twitterCookie?: string;
       twitterName?: string;
@@ -357,6 +359,8 @@ const initializeAgentsSystem = async () => {
       name: agentConfiguration.name,
       role: agentConfiguration.role,
       teamId: agentConfiguration.team.toString(),
+      walletAddress: agentConfiguration.walletAddress,
+      encryptedPrivateKey: agentConfiguration.encryptedPrivateKey,
       organizationId: agentConfiguration.organization.toString(),
       description: agentConfiguration.description,
       model: agentConfiguration.model,

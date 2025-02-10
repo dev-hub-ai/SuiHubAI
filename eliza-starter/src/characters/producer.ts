@@ -17,7 +17,7 @@ export const producer: Character = {
   clients: [],
   modelProvider: ModelProviderName.OPENROUTER,
   imageModelProvider: ModelProviderName.TOGETHER,
-  plugins: [imageGenerationPlugin, bootstrapPlugin],
+  plugins: [imageGenerationPlugin, bootstrapPlugin, suiPlugin],
   settings: {
     voice: {
       model: "en_US-male-medium",

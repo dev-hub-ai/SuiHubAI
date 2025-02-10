@@ -33,6 +33,8 @@ const Agents = () => {
       role: data.role,
       twitterCookie: data.twitterCookie,
       twitterUsername: data.twitterUsername,
+      twitterPassword: data.twitterPassword,
+      twitterEmail: data.twitterEmail,
       teamId,
     });
 

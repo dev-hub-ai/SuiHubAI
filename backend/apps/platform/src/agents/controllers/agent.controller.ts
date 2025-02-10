@@ -30,6 +30,8 @@ export default class AgentController {
       model: body.model,
       twitterCookie: body.twitterCookie,
       twitterUsername: body.twitterUsername,
+      twitterPassword: body.twitterPassword,
+      twitterEmail: body.twitterEmail,
       modelApiKey: body.modelApiKey,
       description: body.description,
       createdById: session.userId,
@@ -46,6 +48,8 @@ export default class AgentController {
       description: body.description,
       twitterCookie: body.twitterCookie,
       twitterUsername: body.twitterUsername,
+      twitterPassword: body.twitterPassword,
+      twitterEmail: body.twitterEmail,
       updatedById: session.userId,
     });
   }

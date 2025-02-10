@@ -31,6 +31,8 @@ export interface CreateAgentParams {
   model: string;
   modelApiKey: string;
   twitterCookie?: string;
+  twitterPassword?: string;
+  twitterEmail?: string;
   twitterUsername?: string;
   description?: string;
 }
@@ -42,6 +44,8 @@ export interface UpdateAgentParams {
   description?: string;
   twitterCookie?: string;
   twitterUsername?: string;
+  twitterPassword?: string;
+  twitterEmail?: string;
 }
 
 export interface AgentsApi {

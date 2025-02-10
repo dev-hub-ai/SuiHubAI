@@ -10,6 +10,8 @@ export interface AgentFormData {
   modelApiKey: string;
   twitterCookie?: string;
   twitterUsername?: string;
+  twitterPassword?: string;
+  twitterEmail?: string;
 }
 
 interface AgentFormProps {
@@ -39,6 +41,8 @@ const AgentForm = ({
   const [modelApiKey, setModelApiKey] = useState(initialData?.modelApiKey || '');
   const [twitterCookie, setTwitterCookie] = useState(initialData?.twitterCookie || '');
   const [twitterUsername, setTwitterUsername] = useState(initialData?.twitterUsername || '');
+  const [twitterPassword, setTwitterPassword] = useState(initialData?.twitterPassword || '');
+  const [twitterEmail, setTwitterEmail] = useState(initialData?.twitterEmail || '');
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -110,8 +114,38 @@ const AgentForm = ({
                 type="text"
                 id="twitterUsername"
                 name="twitterUsername"
-                value={twitterCookie}
+                value={twitterUsername}
                 onChange={(event) => setTwitterUsername(event.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          ) : null}
+          {role === AgentRole.Adviser || role === AgentRole.Influencer ? (
+            <div>
+              <label htmlFor="twitterEmail" className="block text-sm font-medium text-gray-400">
+                Twitter Email
+              </label>
+              <input
+                type="text"
+                id="twitterEmail"
+                name="twitterEmail"
+                value={twitterEmail}
+                onChange={(event) => setTwitterEmail(event.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          ) : null}
+          {role === AgentRole.Adviser || role === AgentRole.Influencer ? (
+            <div>
+              <label htmlFor="twitterPassword" className="block text-sm font-medium text-gray-400">
+                Twitter Password
+              </label>
+              <input
+                type="text"
+                id="twitterPassword"
+                name="twitterPassword"
+                value={twitterPassword}
+                onChange={(event) => setTwitterPassword(event.target.value)}
                 className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
