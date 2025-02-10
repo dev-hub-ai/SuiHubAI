@@ -1,20 +1,21 @@
-FROM node:22 as build
+FROM node:22.0.0 as build
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
+RUN corepack -v
 
 WORKDIR /usr/src/app/
 
 COPY package.json pnpm-lock.yaml* ./
 
-RUN pnpm i --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
 RUN npm run build
 
-FROM node:22
+FROM node:22.0.0
 
 WORKDIR /usr/src/app/
 
