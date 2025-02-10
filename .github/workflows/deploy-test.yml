@@ -68,6 +68,8 @@ jobs:
         EXPRESS_APP_PORT
         ELIZA_API_URL
         ELIZA_API_SECRET_KEY
+        SUI_NETWORK
+        TOGETHER_API_KEY
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
