@@ -4,6 +4,7 @@
 !src/**/*.ts
 pnpm-lock.yaml
 
+/src/plugin/nftPlugin/contract/test_nft_collection
 .env
 node_modules
 
