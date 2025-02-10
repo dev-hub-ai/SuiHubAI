@@ -19,6 +19,7 @@ FROM node:22.0.0
 
 WORKDIR /usr/src/app/
 
+COPY package.json ./
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 
