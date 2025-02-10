@@ -1,5 +1,5 @@
-import WalletConnection from '@/components/WalletConnection';
 import { APP_NAME } from '@/constants/core.ts';
+import { ConnectButton } from '@mysten/dapp-kit';
 
 const Home = () => {
   return (
@@ -13,13 +13,7 @@ const Home = () => {
           </h3>
         </div>
         <div className="flex flex-col">
-          <WalletConnection>
-            {({ setIsOpen }) => (
-              <button onClick={() => setIsOpen(true)} className="p-4 rounded text-white text-bold bg-[#482F8A]">
-                Join {APP_NAME}
-              </button>
-            )}
-          </WalletConnection>
+          <ConnectButton className="w-full" />
         </div>
       </div>
       <img className="fixed bottom-0 h-full" src="/grid.png" alt="grid" />
