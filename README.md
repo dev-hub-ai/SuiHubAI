@@ -74,6 +74,6 @@ NODE_ENV=development
 ---
 
 ## **Installation Recommendations**  
-- Ensure you have Node.js (version >= 14) and a package manager (`npm`, `yarn`, or `pnpm`) installed.  
+- Ensure you have Node.js (version >= 22) and a package manager (`npm`, `yarn`, or `pnpm`) installed.  
 - Use the same package manager strategy for all components (e.g., always use `npm` or `yarn`).  
 - If errors occur, verify that environment variables are set correctly.
