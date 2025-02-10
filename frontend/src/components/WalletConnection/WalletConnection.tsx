@@ -15,7 +15,7 @@ export interface WalletConnectionProps {
 const WalletConnection = () => {
   return (
     <div className="relative">
-      <ConnectButton className="w-full"/>
+      <ConnectButton className="w-full" />
     </div>
   );
 };
