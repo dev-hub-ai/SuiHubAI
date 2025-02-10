@@ -1,10 +1,8 @@
 import { useMemo } from 'react';
 import { BrowserRouter } from 'react-router';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider } from 'wagmi';
 import { toast, ToastContainer } from 'react-toastify';
 import { RestApiClient } from './api/ApiClient';
-import wagmiConfig from './wagmi-config';
 import Header from './components/Header';
 import Routing from './Routing';
 import AppInitializer from './AppInitializer';
@@ -15,7 +13,23 @@ import AgentsRestApi from './api/AgentsApi';
 import AgentTeamInteractionsRestApi from './api/AgentTeamInteractionsApi';
 import AgentMessagesRestApi from './api/AgentMessagesApi';
 
+import { getFullnodeUrl } from '@mysten/sui/client';
+import { createNetworkConfig, SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+
 import './tailwind.css';
+import '@mysten/dapp-kit/dist/index.css';
+
+const { networkConfig } = createNetworkConfig({
+  devnet: {
+    url: getFullnodeUrl('devnet'),
+  },
+  testnet: {
+    url: getFullnodeUrl('testnet'),
+  },
+  mainnet: {
+    url: getFullnodeUrl('mainnet'),
+  },
+});
 
 function App() {
   const queryClient = useMemo(() => {
@@ -52,16 +66,18 @@ function App() {
 
   return (
     <BrowserRouter>
-      <WagmiProvider config={wagmiConfig}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
         <QueryClientProvider client={queryClient}>
-          <ApiProvider value={services}>
-            <AppInitializer>
-              <Header />
-              <Routing />
-            </AppInitializer>
-          </ApiProvider>
+          <WalletProvider>
+            <ApiProvider value={services}>
+              <AppInitializer>
+                <Header />
+                <Routing />
+              </AppInitializer>
+            </ApiProvider>
+          </WalletProvider>
         </QueryClientProvider>
-      </WagmiProvider>
+      </SuiClientProvider>
       <ToastContainer
         pauseOnFocusLoss={false}
         pauseOnHover={false}

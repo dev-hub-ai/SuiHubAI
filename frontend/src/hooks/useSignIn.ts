@@ -1,13 +1,16 @@
-import { useAccount, useSignMessage } from 'wagmi';
-import { SiweMessage } from 'siwe';
 import useAsyncEffect from '@/hooks/useAsyncEffect';
 import useCreateSessionMutation from '@/hooks/mutations/useCreateSessionMutation';
 import useCreateSessionNonceMutation from '@/hooks/mutations/useCreateSessionNonceMutation';
 import useSession from '@/hooks/useSession';
+import { useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit';
+
+interface Signature {
+  signature: string;
+  bytes: string;
+}
 
 const useSignIn = () => {
-  const { address, isConnected, chainId } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const account = useCurrentAccount();
 
   const [currentUser] = useSession();
 
@@ -16,38 +19,33 @@ const useSignIn = () => {
   const { mutateAsync: createSessionNonce } = useCreateSessionNonceMutation();
   const { mutateAsync: createSession } = useCreateSessionMutation();
 
+  const { mutate: signPersonalMessage } = useSignPersonalMessage();
+
   useAsyncEffect(async () => {
-    if (!isConnected || !chainId || !address || currentUserId !== null) {
+    if (account?.address || currentUserId !== null) {
       return;
     }
 
     try {
-      const nonce = await createSessionNonce(address);
+      const nonce = await createSessionNonce(account?.address || '');
+
+      const message = new TextEncoder().encode('Sign in with Sui to the SuiHubAi');
+      const preparedMessage = 'Sign in with Sui to the SuiHubAi';
 
       // TODO Handle case with non loaded providers.
-      const message = new SiweMessage({
-        address,
-        nonce,
-        chainId,
-        domain: window.location.host,
-        statement: 'Sign in with Ethereum to the ai-office app.',
-        uri: window.location.origin,
-        version: '1',
-      });
-
-      const preparedMessage = message.prepareMessage();
-
-      const signature = await signMessageAsync({ message: preparedMessage });
+      const res: Signature = signPersonalMessage({
+        message: message,
+      }) as unknown as Signature;
 
       await createSession({
-        signature,
+        signature: res.signature || '',
         message: preparedMessage,
         nonce,
       });
     } catch (error) {
       console.error('Error signing in: ', error);
     }
-  }, [currentUserId, address, isConnected, chainId]);
+  }, [currentUserId, account?.address]);
 };
 
 export default useSignIn;
