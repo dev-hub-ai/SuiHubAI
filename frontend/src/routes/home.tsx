@@ -1,5 +1,5 @@
 import WalletConnection from '@/components/WalletConnection';
-import {APP_NAME} from "@/constants/core.ts";
+import { APP_NAME } from '@/constants/core.ts';
 
 const Home = () => {
   return (
