@@ -80,6 +80,7 @@ export const generateCharacter = (agentConfig: AgentConfiguration): AiOfficeChar
     clients: agentConfig.role === 'producer' ? [] : [Clients.TWITTER],
     settings: {
       secrets: {
+        SUI_NETWORK: 'testnet',
         SUI_PRIVATE_KEY: decryptedPrivateKey,
         TWITTER_COOKIES: agentConfig.config.twitterCookie,
         TWITTER_USERNAME: agentConfig.config.twitterUsername,
