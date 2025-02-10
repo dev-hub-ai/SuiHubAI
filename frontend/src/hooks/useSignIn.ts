@@ -22,7 +22,7 @@ const useSignIn = () => {
   const { mutate: signPersonalMessage } = useSignPersonalMessage();
 
   useAsyncEffect(async () => {
-    if (account?.address || currentUserId !== null) {
+    if (!account?.address || currentUserId !== null) {
       return;
     }
 
