@@ -24,6 +24,7 @@ jobs:
       ECS_CLUSTER_NAME: ${{ secrets.TEST_ECS_CLUSTER_NAME }}
       DOCKER_BUILD_ENVS: |
         ENV VITE_API_URL=${{ secrets.TEST_VITE_API_URL }}
+        ENV VITE_APP_NAME="AI Office"
 
   deploy-backend:
     uses: ybt-dev/ai-office/.github/workflows/reusable_deploy_to_ecs.yaml@reusable-workflows/v1
