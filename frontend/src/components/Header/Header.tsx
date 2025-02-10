@@ -1,4 +1,5 @@
 import WalletConnection from '@/components/WalletConnection';
+import { APP_NAME } from '@/constants/core';
 
 const Header = () => {
   return (
@@ -6,7 +7,7 @@ const Header = () => {
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-24">
         <div className="flex items-center space-x-3">
           <img className="h-fit mb-1" src="/logo.png" alt="logo" />
-          <span className="text-xl font-semibold text-white">SuiHubAi</span>
+          <span className="text-xl font-semibold text-white">{APP_NAME}</span>
         </div>
         <div className="flex items-center">
           <WalletConnection />

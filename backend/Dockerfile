@@ -14,6 +14,7 @@ FROM node:20
 
 WORKDIR /usr/src/app/
 
+COPY --from=build /usr/src/app/package.json ./
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@fastify/secure-session": "^7.5.1",
+    "@mysten/sui": "^1.21.2",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",

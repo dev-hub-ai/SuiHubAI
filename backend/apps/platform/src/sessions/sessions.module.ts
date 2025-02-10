@@ -8,6 +8,12 @@ import { SessionController } from './controllers';
 import { DefaultSessionService } from './services';
 import { MongoSessionNonceRepository } from './repositories';
 import { SessionNonce, SessionNonceSchema } from './schemas';
+import { AuthProvider } from './enums';
+import {
+  MessageValidatorService,
+  SuiMessageValidatorService,
+  EthMessageValidatorService,
+} from './services/message-validators';
 import SessionsModuleTokens from './sessions.module.tokens';
 
 @Module({
@@ -27,6 +33,33 @@ import SessionsModuleTokens from './sessions.module.tokens';
     {
       provide: SessionsModuleTokens.Repositories.SessionNonceRepository,
       useClass: MongoSessionNonceRepository,
+    },
+    {
+      provide: SessionsModuleTokens.Factories.MessageValidatorServiceFactory,
+      useFactory: (
+        suiMessageValidatorService: MessageValidatorService,
+        ethMessageValidatorService: MessageValidatorService,
+      ) => {
+        return (authProvider: AuthProvider) => {
+          switch (authProvider) {
+            case AuthProvider.Eth: {
+              return ethMessageValidatorService;
+            }
+            case AuthProvider.Sui: {
+              return suiMessageValidatorService;
+            }
+          }
+        };
+      },
+      inject: [SuiMessageValidatorService, EthMessageValidatorService],
+    },
+{
+      provide: SuiMessageValidatorService,
+      useClass: SuiMessageValidatorService,
+    },
+    {
+      provide: EthMessageValidatorService,
+      useClass: EthMessageValidatorService,
     },
   ],
   exports: [SessionsModuleTokens.Services.SessionService],

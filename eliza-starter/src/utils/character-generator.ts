@@ -60,7 +60,7 @@ export function generateCharacter(agentConfig: AgentConfiguration): AiOfficeChar
     modelProvider: agentConfig.model as ModelProviderName,
     id: agentConfig.id as Character['id'],
     name: agentConfig.name,
-    clients: [agentConfig.role !== "producer" && Clients.TWITTER],
+    clients: agentConfig.role === 'producer' ? [] : [Clients.TWITTER],
     settings: {
       secrets: {
         TWITTER_COOKIES: agentConfig.config.twitterCookie,
