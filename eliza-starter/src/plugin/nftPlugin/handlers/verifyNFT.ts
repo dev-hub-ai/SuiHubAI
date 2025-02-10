@@ -1,68 +1,70 @@
 import type { IAgentRuntime } from "@elizaos/core";
-import { WalletProvider } from "../../baseSepPlugin/providers/wallet";
+import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
+import {
+  getNFTInfo,
+  getTransactionInfo,
+} from "../utils/generateMoveContractCode";
+import { SuiNetwork } from "../utils/utils";
 
 export async function verifyNFT({
   runtime,
-  collectionAddress,
-  NFTAddress,
+  collectionId,
+  nftId,
 }: {
   runtime: IAgentRuntime;
-  collectionAddress: string;
-  NFTAddress: string;
+  collectionId: string;
+  nftId: string;
 }) {
-  const privateKey = runtime.getSetting("EVM_PRIVATE_KEY") as `0x${string}`;
-  if (!privateKey) {
-    throw new Error("EVM_PRIVATE_KEY is missing");
-  }
-
-  const wallet = new WalletProvider(privateKey, runtime.cacheManager);
-  const publicClient = wallet.getPublicClient("baseSepolia");
-
-  // ERC721 interface for ownerOf and token collection verification
-  const erc721Abi = [
-    {
-      inputs: [{ name: "tokenId", type: "uint256" }],
-      name: "ownerOf",
-      outputs: [{ name: "", type: "address" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "name",
-      outputs: [{ name: "", type: "string" }],
-      stateMutability: "view",
-      type: "function",
-    },
-  ] as const;
-
   try {
-    // Get the owner of the NFT
-    const owner = await publicClient.readContract({
-      address: collectionAddress as `0x${string}`,
-      abi: erc721Abi,
-      functionName: "ownerOf",
-      args: [BigInt(NFTAddress)],
+    // Ensure we're on testnet
+    if (runtime.getSetting("SUI_NETWORK") !== "testnet") {
+      throw new Error("NFT verification is only supported on Sui testnet");
+    }
+
+    const suiClient = new SuiClient({
+      url: getFullnodeUrl(runtime.getSetting("SUI_NETWORK") as SuiNetwork),
     });
 
-    // Get the collection name for verification
-    const collectionName = await publicClient.readContract({
-      address: collectionAddress as `0x${string}`,
-      abi: erc721Abi,
-      functionName: "name",
-    });
+    // Get NFT object information
+    const nftInfo = await getNFTInfo(nftId);
+
+    // Verify the NFT exists and belongs to the correct collection
+    if (!nftInfo || !nftInfo.data) {
+      return {
+        success: false,
+        error: "NFT not found",
+        verified: false,
+      };
+    }
+
+    // Check if the NFT belongs to the specified collection
+    const nftData = nftInfo.data;
+    const nftCollectionId = nftData.collection;
+
+    if (nftCollectionId !== collectionId) {
+      return {
+        success: false,
+        error: "NFT does not belong to the specified collection",
+        verified: false,
+      };
+    }
 
     return {
       success: true,
-      owner,
-      collectionName,
+      owner: nftData.owner,
+      collectionId: nftCollectionId,
+      nftData: {
+        name: nftData.name,
+        description: nftData.description,
+        url: nftData.url,
+      },
       verified: true,
     };
   } catch (error) {
     console.error("Error verifying NFT:", error);
     return {
       success: false,
-      error: "Failed to verify NFT ownership or collection",
+      error: error instanceof Error ? error.message : "Failed to verify NFT",
       verified: false,
     };
   }

@@ -11,46 +11,51 @@ import {
 } from "@elizaos/core";
 import { mintNFTTemplate } from "../templates/index.ts";
 import { type MintNFTContent, MintNFTSchema } from "../types/index.ts";
-import { TransactionBlock } from "@mysten/sui.js";
-import { initSuiProvider } from "../providers/wallet.ts";
+import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
+import { parseAccount, SuiNetwork } from "../utils/utils.ts";
+import { mintNFT } from "../utils/generateMoveContractCode.ts";
 
 function isMintNFTContent(content: any): content is MintNFTContent {
-  return typeof content.collectionAddress === "string";
+  return (
+    typeof content.collectionId === "string" &&
+    typeof content.collectionCap === "string" &&
+    typeof content.packageId === "string"
+  );
 }
 
 export class MintNFTAction {
-  private suiProvider;
+  private suiClient: SuiClient;
 
   constructor(private runtime: IAgentRuntime) {
-    this.suiProvider = initSuiProvider(runtime);
+    if (!runtime.getSetting("SUI_PRIVATE_KEY")) {
+      throw new Error("Sui private key not found");
+    }
+    this.suiClient = new SuiClient({
+      url: getFullnodeUrl("testnet"),
+    });
   }
 
-  async mintNFT(content: MintNFTContent) {
+  async mintNFT(content: MintNFTContent, tokenId: number) {
     if (!isMintNFTContent(content)) {
       throw new Error("Invalid content for MINT_NFT action");
     }
 
-    // Create transaction block
-    const tx = new TransactionBlock();
-
-    // Call mint function on the collection
-    tx.moveCall({
-      target: `${content.collectionAddress}::mint`,
-      arguments: [tx.pure(this.suiProvider.getAddress())],
+    // Mint NFT using the Move contract
+    const result = await mintNFT(content.packageId as string, {
+      collectionId: content.collectionId as string,
+      collectionCap: content.collectionCap as string,
+      name: `${content.name || "NFT"} #${tokenId}`,
+      description: (content.description as string) || `NFT #${tokenId}`,
+      url: (content.imageUrl as string) || "",
     });
 
-    // Execute transaction
-    const result = await this.suiProvider.signAndExecuteTransactionBlock({
-      transactionBlock: tx,
-    });
-
-    if (!result.digest) {
-      throw new Error("Transaction failed");
+    if (!result.success || !result.nftId) {
+      throw new Error(result.error || "Failed to mint NFT");
     }
 
     return {
-      digest: result.digest,
-      collectionAddress: content.collectionAddress,
+      nftId: result.nftId,
+      transactionId: result.transactionId,
     };
   }
 }
@@ -69,6 +74,7 @@ const mintNFTAction: Action = {
   ],
   description: "Mint NFTs for the collection on Sui",
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
+    // Ensure we have the required Sui private key
     return !!runtime.getSetting("SUI_PRIVATE_KEY");
   },
   handler: async (
@@ -79,6 +85,11 @@ const mintNFTAction: Action = {
     callback: HandlerCallback
   ) => {
     try {
+      // Ensure we're on testnet
+      if (runtime.getSetting("SUI_NETWORK") !== "testnet") {
+        throw new Error("NFT minting is only supported on Sui testnet");
+      }
+
       elizaLogger.log("Composing state for message:", message);
 
       let currentState: State;
@@ -104,11 +115,12 @@ const mintNFTAction: Action = {
       elizaLogger.log("Generate Object:", content);
 
       const action = new MintNFTAction(runtime);
-      const result = await action.mintNFT(content);
+      const tokenId = Math.floor(Math.random() * 1000000);
+      const result = await action.mintNFT(content, tokenId);
 
       if (callback) {
         callback({
-          text: `NFT minted successfully! 🎉\nCollection Address: ${result.collectionAddress}\nTransaction: https://suiexplorer.com/txblock/${result.digest}`,
+          text: `NFT minted successfully! 🎉\nNFT ID: ${result.nftId}\nView on Explorer: https://suiexplorer.com/object/${result.nftId}?network=testnet`,
           attachments: [],
         });
       }
