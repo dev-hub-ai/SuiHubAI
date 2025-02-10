@@ -1,5 +1,5 @@
 import WalletConnection from '@/components/WalletConnection';
-import { APP_NAME } from "@/constants/core";
+import { APP_NAME } from '@/constants/core';
 
 const truncateAddress = (address: string) => {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
