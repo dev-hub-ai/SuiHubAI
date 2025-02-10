@@ -1,4 +1,4 @@
-import { AES, enc } from 'crypto-js';
+import * as crypto from 'crypto-js';
 import {Character, Clients, ModelProviderName} from "@elizaos/core";
 import { advertiser } from "../characters/advertiser.ts";
 import { influencer } from "../characters/influencer.ts";
@@ -39,9 +39,9 @@ const decryptPrivateKey = (encryptedPrivateKey: string): string => {
     throw new Error('WALLET_ENCRYPTION_KEY environment variable is not set');
   }
 
-  const bytes = AES.decrypt(encryptedPrivateKey, encryptionKey);
+  const bytes = crypto.AES.decrypt(encryptedPrivateKey, encryptionKey);
 
-  return bytes.toString(enc.Utf8);
+  return bytes.toString(crypto.enc.Utf8);
 };
 
 const getSecretsByModel = (model: string, modelApiKey: string) => {
