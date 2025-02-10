@@ -226,63 +226,11 @@ const killAgent = async (agentId: string) => {
   }
 };
 
-const initializeAgentsSystem = async () => {
-  const dataDir = path.join(__dirname, "../data");
+const verifySecretKey = (secretKey: string) => {
+  return secretKey === process.env.ELIZA_API_SECRET_KEY;
+};
 
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-
-  const databaseClient = initializeDatabaseClient();
-
-  const databaseName = process.env.MONGODB_NAME || 'ai-office';
-
-  const elizaMongodbAdapter = new MongoDBDatabaseAdapter(
-    databaseClient,
-    databaseName,
-  );
-
-  await elizaMongodbAdapter.init();
-
-  const database = databaseClient.db(databaseName);
-
-  subscribeToAgentConversation(database);
-
-  const agentConfigurations = await database.collection('agents').find<{
-    _id: ObjectId;
-    name: string;
-    role: 'advertiser' | 'influencer' | 'producer';
-    organization: ObjectId;
-    team: ObjectId;
-    description?: string;
-    model: string;
-    modelApiKey: string;
-    config: {
-      twitterCookie?: string;
-      twitterName?: string;
-    };
-  }>({}).toArray();
-
-  for (const agentConfiguration of agentConfigurations) {
-    const character = generateCharacter({
-      id: agentConfiguration._id.toString(),
-      name: agentConfiguration.name,
-      role: agentConfiguration.role,
-      teamId: agentConfiguration.team.toString(),
-      organizationId: agentConfiguration.organization.toString(),
-      description: agentConfiguration.description,
-      model: agentConfiguration.model,
-      modelApiKey: agentConfiguration.modelApiKey,
-      config: agentConfiguration.config,
-    });
-
-    await startAgent(character, elizaMongodbAdapter);
-  }
-
-  const verifySecretKey = (secretKey: string) => {
-    return secretKey === process.env.ELIZA_API_SECRET_KEY;
-  };
-
+const initializeExpressApp = (elizaMongodbAdapter: MongoDBDatabaseAdapter) => {
   expressApp.get('/health', (request, response) => {
     response.status(200).send('OK');
   });
@@ -363,6 +311,61 @@ const initializeAgentsSystem = async () => {
   expressApp.listen(process.env.EXPRESS_APP_PORT || 3001, () => {
     console.log(`Express app is running on port ${process.env.EXPRESS_APP_PORT || 3001}`);
   });
+};
+
+const initializeAgentsSystem = async () => {
+  const dataDir = path.join(__dirname, "../data");
+
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  const databaseClient = initializeDatabaseClient();
+
+  const databaseName = process.env.MONGODB_NAME || 'ai-office';
+
+  const elizaMongodbAdapter = new MongoDBDatabaseAdapter(
+    databaseClient,
+    databaseName,
+  );
+
+  await elizaMongodbAdapter.init();
+
+  const database = databaseClient.db(databaseName);
+
+  initializeExpressApp(elizaMongodbAdapter);
+  subscribeToAgentConversation(database);
+
+  const agentConfigurations = await database.collection('agents').find<{
+    _id: ObjectId;
+    name: string;
+    role: 'advertiser' | 'influencer' | 'producer';
+    organization: ObjectId;
+    team: ObjectId;
+    description?: string;
+    model: string;
+    modelApiKey: string;
+    config: {
+      twitterCookie?: string;
+      twitterName?: string;
+    };
+  }>({}).toArray();
+
+  for (const agentConfiguration of agentConfigurations) {
+    const character = generateCharacter({
+      id: agentConfiguration._id.toString(),
+      name: agentConfiguration.name,
+      role: agentConfiguration.role,
+      teamId: agentConfiguration.team.toString(),
+      organizationId: agentConfiguration.organization.toString(),
+      description: agentConfiguration.description,
+      model: agentConfiguration.model,
+      modelApiKey: agentConfiguration.modelApiKey,
+      config: agentConfiguration.config,
+    });
+
+    await startAgent(character, elizaMongodbAdapter);
+  }
 };
 
 initializeAgentsSystem().catch((error) => {
